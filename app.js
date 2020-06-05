@@ -1,5 +1,6 @@
 ﻿require("rootpath")();
 const express = require("express");
+var socket = require("socket.io");
 const bodyParser = require("body-parser");
 const app = express();
 const expressValidator = require("express-validator");
@@ -102,3 +103,32 @@ app.use("/team", require("./routes/teams_route"));
 app.use(errorHandler);
 
 module.exports = app;
+
+var LoggedInUsers = [];
+var server = app.listen(4000, () => {
+  console.log("listening to port 4000");
+})
+
+var io = socket(server);
+
+io.on('connection', async (socket) => {
+  // socket is unique to frontend and backend.
+  console.log("User is using app now", socket.id);
+
+  socket.addListener('sendID', function (data) {
+    console.log('pushin');
+    LoggedInUsers.push({
+      User_Id: socket.id,
+    });
+    console.log(LoggedInUsers);
+  });
+
+  socket.on('hello', function (hello) { console.log('hello'); });
+
+  socket.on('disconnect', async () => {
+    console.log('disconnect');
+    LoggedInUsers = LoggedInUsers.filter(data => data.User_Id != socket.id);
+    console.log(LoggedInUsers);
+  });
+  console.log(LoggedInUsers);
+});
