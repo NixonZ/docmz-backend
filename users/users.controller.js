@@ -419,7 +419,7 @@ let authenticate = (req, res) => {
   //   if (errors) {
   //     res.json({ status: false, messages: errors });
   //   } else {
-  let { email, password } = req.body;
+  let { email, password, socketID } = req.body;
 
   const messageToSearchWith = new User({ email });
   messageToSearchWith.encryptFieldsSync();
@@ -427,7 +427,12 @@ let authenticate = (req, res) => {
   let cipher = crypto.createCipheriv(algorithm, new Buffer.from(key), iv);
   let encrypted = cipher.update(password, "utf8", "hex") + cipher.final("hex");
 
-  User.findOne({ email: messageToSearchWith.email }).then(user => {
+  User.findOneAndUpdate(
+    { email: messageToSearchWith.email },
+    {
+      $set: { current_socketID: socketID }
+    }
+  ).then(user => {
     app.get(sessionChecker, (req, res) => {
       console.log({ status: "session stored" });
     });
