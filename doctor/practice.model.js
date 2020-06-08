@@ -113,7 +113,8 @@ const practise = new Schema({
   isAssistant: { type: Boolean, default: false }, //denotes whether the account is assistent or not
   rights: [{ type: String }], // Array of rights that assistent have
   assistants: [{ type: Schema.Types.ObjectId, ref: "Practise" }], // if doctor, list of all assistents
-  parent: { type: Schema.Types.ObjectId, ref: "Practise" }
+  parent: { type: Schema.Types.ObjectId, ref: "Practise" },
+  current_socketid: { type: String, unique: true }
 });
 
 module.exports = mongoose.model("Practise", practise);

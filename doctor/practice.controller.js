@@ -1187,11 +1187,16 @@ signUpDoc = async (req, res) => {
 let authenticateDoctor = (req, res) => {
   if (req.body.email) {
     {
-      let { email, password } = req.body;
+      let { email, password, SocketID } = req.body;
       let cipher = crypto.createCipheriv(algorithm, new Buffer.from(key), iv);
       let encrypted =
         cipher.update(password, "utf8", "hex") + cipher.final("hex");
-      Practise.findOne({ email }).then(doctor => {
+      Practise.findOneAndUpdate(
+        { email },
+        {
+          $set: { current_socketID: socketID }
+        }
+      ).then(doctor => {
         app.get(sessionChecker, (req, res) => {
           console.log({ status: "session stored" });
         });

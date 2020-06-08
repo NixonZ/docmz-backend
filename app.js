@@ -105,11 +105,16 @@ app.use(errorHandler);
 module.exports = app;
 
 global.LoggedInUsers = [];
+
 var server = app.listen(4000, () => {
   console.log("listening to port 4000");
 });
 
 var io = socket(server);
+
+import CallRouter from "./routes/call_routes.js";
+
+app.use("/call", CallRouter(io));
 
 io.on("connection", async socket => {
   // socket is unique to frontend and backend.
@@ -131,5 +136,4 @@ io.on("connection", async socket => {
     LoggedInUsers = LoggedInUsers.filter(data => data.User_Id != socket.id);
     console.log(LoggedInUsers);
   });
-  console.log(LoggedInUsers);
 });

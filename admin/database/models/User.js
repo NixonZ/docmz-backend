@@ -13,8 +13,7 @@ var userSchema = new Schema({
     last_name: String
   },
   created_at: Date,
-  updated_at: Date,
-  current_socketid: { type: String, unique: true }
+  updated_at: Date
 });
 
 userSchema.pre("save", function(next) {

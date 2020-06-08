@@ -31,6 +31,7 @@ const schema = new Schema({
   verified: { type: Boolean },
   passwordexpires: { type: Date },
   createdDate: { type: Date, default: Date.now },
+  current_socketid: { type: String, unique: true },
   appointments: [{ type: Schema.Types.ObjectId, ref: "Appointments" }],
   cancelledAppointments: [{ type: Schema.Types.ObjectId, ref: "Appointments" }],
   lastLogin: { type: Date, default: Date.now },
