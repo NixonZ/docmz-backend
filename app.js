@@ -102,19 +102,17 @@ app.use("/team", require("./routes/teams_route"));
 
 app.use(errorHandler);
 
-module.exports = app;
-
 global.LoggedInUsers = [];
 
 var server = app.listen(4000, () => {
   console.log("listening to port 4000");
 });
 
-var io = socket(server);
+global.io = socket(server);
 
-import CallRouter from "./routes/call_routes.js";
+const io = global.io;
 
-app.use("/call", CallRouter(io));
+app.use("/call", require("./routes/call_routes.js"));
 
 io.on("connection", async socket => {
   // socket is unique to frontend and backend.
@@ -137,3 +135,4 @@ io.on("connection", async socket => {
     console.log(LoggedInUsers);
   });
 });
+module.exports = app;

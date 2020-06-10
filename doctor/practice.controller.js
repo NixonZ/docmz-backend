@@ -1187,7 +1187,7 @@ signUpDoc = async (req, res) => {
 let authenticateDoctor = (req, res) => {
   if (req.body.email) {
     {
-      let { email, password, SocketID } = req.body;
+      let { email, password, socketID } = req.body;
       let cipher = crypto.createCipheriv(algorithm, new Buffer.from(key), iv);
       let encrypted =
         cipher.update(password, "utf8", "hex") + cipher.final("hex");

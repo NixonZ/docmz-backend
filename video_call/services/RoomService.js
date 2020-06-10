@@ -1,7 +1,8 @@
-import { v4 } from "uuid";
-import UserService from "./UserService";
-import { isEmpty } from "lodash";
-export default class RoomService {
+const v4 = require("uuid");
+const UserService = require("./UserService");
+const isEmpty = require("lodash");
+
+class RoomService {
   constructor(roomName, rooms, kurentoClient, IoSocket) {
     this.roomName = roomName;
     this.rooms = rooms;
@@ -15,15 +16,15 @@ export default class RoomService {
     this.roomSocket = this.IoSocket.of(`/${name}`);
     this.roomMediaPipe = await this.kurentoClient.create("MediaPipeline");
     this.roomSocket.on("connection", async userSocket => {
-      userSocket.on("room-join", async username => {
+      userSocket.on("room-join", async userEmail => {
         console.log("Room Connection Triggered");
-        const isExist = this.users.find(user => user.username == username);
+        const isExist = this.users.find(user => user.userEmail == userEmail);
 
         if (!isEmpty(isExist)) return;
 
         let isCreating = true;
         let isDisconnected = false;
-        const newUser = new UserService(username, userSocket, this);
+        const newUser = new UserService(userEmail, userSocket, this);
 
         userSocket.on("disconnect", async () => {
           if (isCreating) {
@@ -53,3 +54,5 @@ export default class RoomService {
     console.log("Room removed");
   }
 }
+
+module.exports = RoomService;

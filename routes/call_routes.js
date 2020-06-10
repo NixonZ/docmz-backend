@@ -1,22 +1,14 @@
-import express from "express";
-import chatRouter from "./chat_routes";
-import { executeAsync } from "./helpers/appHelper";
+const express = require("express");
+const executeAsync = require("./appHelper");
+const router = express.Router();
 
-export default io => {
-  const router = express.Router();
+const ChatController = require("./../video_call/chat.controller");
 
-  router.use("/auth", (req, res) => {
-    res.send("Auth");
-  });
+router.get("/auth", (req, res) => {
+  res.send("Auth");
+});
 
-  router.use("/chat", chatRouter(io));
+const ChatControl = new ChatController(global.io);
+router.get("/chat", executeAsync(ChatControl.index));
 
-  router.use(
-    "*",
-    executeAsync(() => {
-      throw new Error("404");
-    })
-  );
-
-  return router;
-};
+module.exports = router;
