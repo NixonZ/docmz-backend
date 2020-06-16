@@ -15,6 +15,7 @@ const errorHandler = require("_helpers/error-handler");
 const cookieparser = require("cookie-parser");
 const session = require("express-session");
 const morgan = require("morgan");
+const chatModel = require("./chat/chat.model");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -128,6 +129,27 @@ io.on("connection", async socket => {
   });
 
   // socket.on('hello', function (hello) { console.log('hello'); });
+  socket.on("sendMessage", async data => {
+    //data={sender,reciever,message}
+    const recieverOnline = LoggedInUsers.filter(
+      ele => ele.email_id === data.reciever
+    );
+    if (recieverOnline.length > 0) {
+      //reciever is online
+      const recieverSocketId = recieverOnline[0].user_Id;
+
+      //socket send message to reciever
+      io.to(recieverSocketId).emit("recieveMessage", data);
+    } else {
+      //reciever is offline
+    }
+
+    const chat = new chatModel(generateChatName(data.sender, data.reciever))(
+      data
+    ); //collection name = doc.chat
+
+    chat.save();
+  });
 
   socket.on("disconnect", async () => {
     console.log("disconnect");
@@ -135,4 +157,16 @@ io.on("connection", async socket => {
     console.log(LoggedInUsers);
   });
 });
+
+//function for generating unique combination of emails
+//here appending both emails and then sorting them alphabetically
+const generateChatName = (...emails) => {
+  let name = "";
+  emails.forEach(email => (name = name + email));
+  return name
+    .split("")
+    .sort()
+    .join("");
+};
+
 module.exports = app;

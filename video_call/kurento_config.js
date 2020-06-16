@@ -1,2 +1,2 @@
 exports.KURENTO_URL =
-  process.env.KURENTO_URL || "ws://139.59.20.209:8888/kurento";
+  process.env.KURENTO_URL || "http://52.136.116.217:8888/kurento";
