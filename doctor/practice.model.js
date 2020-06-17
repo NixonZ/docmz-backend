@@ -114,7 +114,15 @@ const practise = new Schema({
   rights: [{ type: String }], // Array of rights that assistent have
   assistants: [{ type: Schema.Types.ObjectId, ref: "Practise" }], // if doctor, list of all assistents
   parent: { type: Schema.Types.ObjectId, ref: "Practise" },
-  current_socketid: { type: String, unique: true }
+  current_socketid: { type: String, unique: true },
+
+  chats: [
+    {
+      chatId: Schema.Types.ObjectId,
+      to: String,
+      patientName: String
+    }
+  ]
 });
 
 module.exports = mongoose.model("Practise", practise);

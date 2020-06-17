@@ -129,8 +129,8 @@ io.on("connection", async socket => {
   });
 
   // socket.on('hello', function (hello) { console.log('hello'); });
-  socket.on("sendMessage", async data => {
-    //data={sender,reciever,message}
+  socket.on("sendMessage", data => {
+    //data={reciever,message,chatId,fromDoc}
     const recieverOnline = LoggedInUsers.filter(
       ele => ele.email_id === data.reciever
     );
@@ -139,14 +139,18 @@ io.on("connection", async socket => {
       const recieverSocketId = recieverOnline[0].user_Id;
 
       //socket send message to reciever
-      io.to(recieverSocketId).emit("recieveMessage", data);
+      io.to(recieverSocketId).emit("recieveMessage", {
+        message: data.message,
+        fromDoc: data.fromDoc
+      });
     } else {
       //reciever is offline
     }
 
-    const chat = new chatModel(generateChatName(data.sender, data.reciever))(
-      data
-    ); //collection name = doc.chat
+    const chat = new chatModel(data.chatId)({
+      message: data.message,
+      fromDoc: data.fromDoc
+    }); //collection name = chat.uuid4()
 
     chat.save();
   });
@@ -157,16 +161,5 @@ io.on("connection", async socket => {
     console.log(LoggedInUsers);
   });
 });
-
-//function for generating unique combination of emails
-//here appending both emails and then sorting them alphabetically
-const generateChatName = (...emails) => {
-  let name = "";
-  emails.forEach(email => (name = name + email));
-  return name
-    .split("")
-    .sort()
-    .join("");
-};
 
 module.exports = app;

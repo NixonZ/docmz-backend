@@ -26,7 +26,15 @@ const patient = new Schema({
   practiseId: { type: String },
   providerId: { type: String },
 
-  isActive: { type: String }
+  isActive: { type: String },
+
+  chats: [
+    {
+      chatId: Schema.Types.ObjectId,
+      to: String,
+      docName: String
+    }
+  ]
 });
 
 module.exports = mongoose.model("Patient", patient);
