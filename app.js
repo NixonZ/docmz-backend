@@ -129,28 +129,31 @@ io.on("connection", async socket => {
   });
 
   // socket.on('hello', function (hello) { console.log('hello'); });
+
   socket.on("sendMessage", data => {
     //data={reciever,message,chatId,fromDoc}
+
     const recieverOnline = LoggedInUsers.filter(
       ele => ele.email_id === data.reciever
     );
+
+    const chat = new (chatModel(data.chatId))({
+      message: data.message,
+      fromDoc: data.fromDoc
+    }); //collection name = chat.uuid4()
+
     if (recieverOnline.length > 0) {
       //reciever is online
       const recieverSocketId = recieverOnline[0].user_Id;
 
       //socket send message to reciever
       io.to(recieverSocketId).emit("recieveMessage", {
-        message: data.message,
-        fromDoc: data.fromDoc
+        chat: chat.toObject(),
+        chatId: data.chatId
       });
     } else {
       //reciever is offline
     }
-
-    const chat = new chatModel(data.chatId)({
-      message: data.message,
-      fromDoc: data.fromDoc
-    }); //collection name = chat.uuid4()
 
     chat.save();
   });
