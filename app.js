@@ -120,10 +120,11 @@ io.on("connection", async socket => {
   console.log("User is using app now", socket.id);
 
   socket.addListener("sendID", function(data) {
-    console.log("pushin");
+    console.log("pushing");
     LoggedInUsers.push({
       email_id: data.email_id,
-      user_Id: socket.id
+      user_Id: socket.id,
+      LoggedInAt: data.time
     });
     console.log(LoggedInUsers);
   });
@@ -158,9 +159,9 @@ io.on("connection", async socket => {
     chat.save();
   });
 
-  socket.on("disconnect", async () => {
+  socket.on("RemoveUser", async email => {
     console.log("disconnect");
-    LoggedInUsers = LoggedInUsers.filter(data => data.User_Id != socket.id);
+    LoggedInUsers = LoggedInUsers.filter(data => data.email_id != email);
     console.log(LoggedInUsers);
   });
 });
