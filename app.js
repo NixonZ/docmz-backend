@@ -119,24 +119,20 @@ io.on("connection", async socket => {
   // socket is unique to frontend and backend.
   console.log("User is using app now", socket.id);
 
-  socket.on("sendID", function(data) {
-    console.log("pushing " + JSON.stringify(data));
+  socket.addListener("sendID", function(data) {
+    console.log("pushin");
     LoggedInUsers.push({
       email_id: data.email_id,
-      user_Id: socket.id,
-      LoggedInAt: data.time
+      user_Id: socket.id
     });
-    console.log("users" + JSON.stringify(LoggedInUsers));
+    console.log(LoggedInUsers);
   });
 
   // socket.on('hello', function (hello) { console.log('hello'); });
 
   socket.on("sendMessage", data => {
     //data={reciever,message,chatId,sender}
-
-    if (data.chatId === null) {
-      //start new chat
-    }
+    console.log("message recieved");
 
     const recieverOnline = LoggedInUsers.filter(
       ele => ele.email_id === data.reciever
@@ -144,7 +140,8 @@ io.on("connection", async socket => {
 
     const chat = new (chatModel(data.chatId))({
       message: data.message,
-      from: data.sender
+      from: data.sender,
+      _id: "acv"
     }); //collection name = chat.uuid4()
 
     if (recieverOnline.length > 0) {
@@ -160,13 +157,24 @@ io.on("connection", async socket => {
       //reciever is offline
     }
 
-    chat.save();
+    console.log("Sending back to " + socket.id);
+    io.to(socket.id).emit("recieveMessage", {
+      chat: chat.toObject(),
+      chatId: data.chatId
+    });
+
+    // chat.save();
   });
 
-  socket.on("RemoveUser", async email => {
-    console.log("disconnect");
-    LoggedInUsers = LoggedInUsers.filter(data => data.email_id != email);
+  socket.on("RemoveUser", async () => {
+    console.log("remove user");
+    // socket.disconnect();
+    LoggedInUsers = LoggedInUsers.filter(data => data.user_Id != socket.id);
     console.log(LoggedInUsers);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("disconnected");
   });
 });
 
