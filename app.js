@@ -119,20 +119,24 @@ io.on("connection", async socket => {
   // socket is unique to frontend and backend.
   console.log("User is using app now", socket.id);
 
-  socket.addListener("sendID", function(data) {
-    console.log("pushing");
+  socket.on("sendID", function(data) {
+    console.log("pushing " + JSON.stringify(data));
     LoggedInUsers.push({
       email_id: data.email_id,
       user_Id: socket.id,
       LoggedInAt: data.time
     });
-    console.log(LoggedInUsers);
+    console.log("users" + JSON.stringify(LoggedInUsers));
   });
 
   // socket.on('hello', function (hello) { console.log('hello'); });
 
   socket.on("sendMessage", data => {
-    //data={reciever,message,chatId,fromDoc}
+    //data={reciever,message,chatId,sender}
+
+    if (data.chatId === null) {
+      //start new chat
+    }
 
     const recieverOnline = LoggedInUsers.filter(
       ele => ele.email_id === data.reciever
@@ -140,7 +144,7 @@ io.on("connection", async socket => {
 
     const chat = new (chatModel(data.chatId))({
       message: data.message,
-      fromDoc: data.fromDoc
+      from: data.sender
     }); //collection name = chat.uuid4()
 
     if (recieverOnline.length > 0) {
