@@ -118,9 +118,12 @@ app.use("/call", require("./routes/call_routes.js"));
 io.on("connection", async socket => {
   // socket is unique to frontend and backend.
   console.log("User is using app now", socket.id);
+  var userEmail = null;
 
   socket.addListener("sendID", function(data) {
-    console.log("pushin");
+    userEmail = data.email_id;
+    console.log("pushing " + userEmail);
+
     LoggedInUsers.push({
       email_id: data.email_id,
       user_Id: socket.id
@@ -131,7 +134,7 @@ io.on("connection", async socket => {
   // socket.on('hello', function (hello) { console.log('hello'); });
 
   socket.on("sendMessage", data => {
-    //data={reciever,message,chatId,sender}
+    //data={reciever,message,chatId,_id}
     console.log("message recieved");
 
     const recieverOnline = LoggedInUsers.filter(
@@ -140,8 +143,8 @@ io.on("connection", async socket => {
 
     const chat = new (chatModel(data.chatId))({
       message: data.message,
-      from: data.sender,
-      _id: "acv"
+      from: userEmail,
+      _id: data._id
     }); //collection name = chat.uuid4()
 
     if (recieverOnline.length > 0) {
@@ -157,24 +160,17 @@ io.on("connection", async socket => {
       //reciever is offline
     }
 
-    console.log("Sending back to " + socket.id);
-    io.to(socket.id).emit("recieveMessage", {
-      chat: chat.toObject(),
-      chatId: data.chatId
-    });
-
-    // chat.save();
+    chat.save();
   });
 
-  socket.on("RemoveUser", async () => {
-    console.log("remove user");
-    // socket.disconnect();
+  socket.on("RemoveUser", () => {
+    console.log("remove user " + userEmail);
     LoggedInUsers = LoggedInUsers.filter(data => data.user_Id != socket.id);
-    console.log(LoggedInUsers);
+    // console.log(LoggedInUsers);
   });
 
   socket.on("disconnect", () => {
-    console.log("disconnected");
+    console.log("disconnected " + userEmail);
   });
 });
 
