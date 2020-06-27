@@ -20,7 +20,7 @@ let storage = multer.diskStorage({
 
 let upload = multer({
   storage: storage,
-  fileFilter: function(req, file, callback) {
+  fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname);
     if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg") {
       req.fileValidationError = "Forbidden extension";
@@ -38,6 +38,9 @@ router.post("/register", userController.register);
 
 //Authenticate an User
 router.post("/authenticate", userController.authenticate);
+
+//Authenticate an User by his face image
+router.post("/authenticatebyImage", userController.authenticatebyImage);
 
 //Update Profile
 router.post("/update", userController.updateProfile);
@@ -117,7 +120,7 @@ let recordsStorage = multer.diskStorage({
 
 let recordsUpload = multer({
   storage: recordsStorage,
-  fileFilter: function(req, file, callback) {
+  fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname);
     if (ext !== ".pdf") {
       req.fileValidationError = "Please upload file in PDF format";
@@ -176,7 +179,7 @@ let idstorage = multer.diskStorage({
 
 let idupload = multer({
   storage: idstorage,
-  fileFilter: function(req, file, callback) {
+  fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname);
     if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg") {
       req.fileValidationError = "Forbidden extension";

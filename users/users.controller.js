@@ -19,6 +19,11 @@ const keySecret = "	sk_test_hoVy16mRDhxHCoNAOAEJYJ4N00pzRH8xK2";
 const stripe = require("stripe")(keySecret);
 const randomstring = require("randomstring");
 const _ = require("underscore");
+const io = require("socket.io-client");
+const socket = io.connect('http://192.168.1.6:5000/')
+socket.on('connect', (client) => {
+  console.log('Connected to port 5000');
+});
 //SMTP Config
 let smtpConfig = {
   host: "smtp.gmail.com",
@@ -110,7 +115,7 @@ let register = async (req, res) => {
       description: firstName + " " + lastName + "|" + email,
       email
     },
-    async function(error, customer) {
+    async function (error, customer) {
       if (error) {
         res.status(400).json({ status: false, message: error });
       } else if (customer) {
@@ -392,7 +397,7 @@ let registerDoctor = async (req, res) => {
             text: "You've been succesfully registered on DocMz. "
           };
 
-          smtpTransport.sendMail(mailOptions, function(err) {
+          smtpTransport.sendMail(mailOptions, function (err) {
             if (err) console.log(err);
           });
 
@@ -464,6 +469,65 @@ let authenticate = (req, res) => {
   });
   // }
 };
+
+let authenticatebyImage = (req, res) => {
+  let { email, image } = req.body;
+
+  const messageToSearchWith = new User({ email });
+  messageToSearchWith.encryptFieldsSync();
+
+  var percentage = 0.7;
+
+  User.findOne(
+    { email: messageToSearchWith.email }
+    // User.findOne({email}
+  ).then(user => {
+    app.get(sessionChecker, (req, res) => {
+      console.log({ status: "session stored" });
+    });
+    console.log(user);
+    console.log(messageToSearchWith);
+    //Checking if User exits or not
+    if (user) {
+      async function recognise() {
+        const main_path = path.join(__dirname, '../')
+        const user_picture = fs.readFileSync(path.join(main_path, user.picture), { encoding: 'base64' });
+
+        socket.emit('VideoandUploadImage', { video_image: image, user_image: user_picture });
+
+        socket.on('output', (output) => {
+          console.log('Recieved Percentage');
+          console.log(percentage);
+          percentage = parseFloat(output);
+          if (!user) {
+            res.status(404).json({ status: false, message: "User Not Found!" });
+          } else if (percentage < 0.75) {
+            res
+              .status(500)
+              .json({ status: false, error: "Percentage not exceeded", percentage: percentage });
+          } else {
+            let token = jwt.sign(user.toJSON(), "catchmeifyoucan", {
+              expiresIn: 604800
+            });
+            req.session.user = user;
+            req.session.Auth = user;
+            res.status(200).json({
+              status: true,
+              user: req.session.Auth,
+              token
+            });
+          }
+        });
+      };
+      recognise().then(() => { });
+    }
+    else {
+      res.json({ status: false, error: "Password Entered is Incorrect" });
+    }
+  });
+  // }
+};
+
 //Function for loggging out
 let logout = (req, res) => {
   res.clearCookie("user_sid");
@@ -728,13 +792,13 @@ function tokenForgetPassword(email) {
   console.log("Reset password token function executed");
   async.waterfall(
     [
-      function(done) {
-        crypto.randomBytes(20, function(err, buf) {
+      function (done) {
+        crypto.randomBytes(20, function (err, buf) {
           let token = buf.toString("hex");
           done(err, token);
         });
       },
-      function(token, done) {
+      function (token, done) {
         User.findOneAndUpdate(
           { email },
           {
@@ -743,11 +807,11 @@ function tokenForgetPassword(email) {
               passwordExpires: Date.now() + 3600000
             }
           }
-        ).exec(function(err, user) {
+        ).exec(function (err, user) {
           done(err, token, user);
         });
       },
-      function(token, user, done) {
+      function (token, user, done) {
         console.log({ user });
 
         let url = "http://localhost:3000/forgetpassword/";
@@ -770,13 +834,13 @@ function tokenForgetPassword(email) {
             "\n\n"
         };
 
-        smtpTransport.sendMail(mailOptions, function(err) {
+        smtpTransport.sendMail(mailOptions, function (err) {
           console.log("Reset Password email sent");
           done(err, "done");
         });
       }
     ],
-    function(err) {
+    function (err) {
       if (err) console.log(err);
     }
   );
@@ -788,13 +852,13 @@ async function assignToken(req, res) {
   console.log("token function executed");
   async.waterfall(
     [
-      function(done) {
-        crypto.randomBytes(20, function(err, buf) {
+      function (done) {
+        crypto.randomBytes(20, function (err, buf) {
           var token = buf.toString("hex");
           done(err, token);
         });
       },
-      function(token, done) {
+      function (token, done) {
         User.findOneAndUpdate(
           { email: email },
           {
@@ -804,13 +868,13 @@ async function assignToken(req, res) {
             }
           },
           { new: true }
-        ).exec(function(err, user) {
+        ).exec(function (err, user) {
           console.log("1");
           done(err, token, user);
           console.log("2");
         });
       },
-      function(token, user, done) {
+      function (token, user, done) {
         console.log({ user });
 
         let url = "http://localhost:3000/forgetpassword/" + token;
@@ -846,13 +910,13 @@ async function assignToken(req, res) {
           //   "\n\n"
         };
         let transporter = nodemailer.createTransport(smtpConfig);
-        transporter.sendMail(mailOptions, function(err) {
+        transporter.sendMail(mailOptions, function (err) {
           console.log("Email sent");
           done(err, "done");
         });
       }
     ],
-    function(err) {
+    function (err) {
       if (err) console.log(err);
       res.status(200).json({ status: true, message: "Email Sent" });
     }
@@ -880,7 +944,7 @@ function setPassword(req, res) {
         passwordExpires: undefined
       }
     },
-    function(err, user) {
+    function (err, user) {
       // var smtptransport2 = nodemailer.createTransport({
       // 	host: 'smtp.gmail.com',
       // 	port: 587,
@@ -905,7 +969,7 @@ function setPassword(req, res) {
         };
 
         let transporter = nodemailer.createTransport(smtpConfig);
-        transporter.sendMail(mailOptions, function(err) {
+        transporter.sendMail(mailOptions, function (err) {
           done(err);
         });
         res.status(200).json({ status: true, message: "Password Set" });
@@ -971,6 +1035,39 @@ let uploadImage = (req, res, next) => {
     });
   // res.send(file);
 };
+
+let faceRecognise = (req, res) => {
+  var socket = io.connect("http://192.168.1.2:5000/");
+  socket.on('connect', async client => {
+    client.emit('VideoImage', req.videodata);
+    User.findOne({ email: req.email })
+      .then((user) => {
+        client.emit('UploadImage', user.imagePath);
+      })
+      .catch(err => {
+        res.status(200).json({
+          status: false,
+          message: err
+        });
+      });
+
+    socket.emit('Recognise', 'Hello');
+    socket.addEventListener('output', (percentage) => {
+      if (percentage > 0.8) {
+        res.status(200).json({
+          status: true,
+          message: "User recognised successfully"
+        });
+      }
+      else {
+        res.status(500).json({
+          status: false,
+          message: "User not recognised try again"
+        })
+      }
+    });
+  });
+}
 
 let attemptQuiz = (req, res) => {
   Appointment.findOneAndUpdate({ _id: req.body.id }, { quiz: req.body.quiz })
@@ -1212,10 +1309,11 @@ addMedicalInfo = async (req, res) => {
     });
 };
 
-getMedicalInfo = (req, res) => {};
+getMedicalInfo = (req, res) => { };
 //Exporting all the functions
 module.exports = {
   authenticate,
+  authenticatebyImage,
   register,
   updateProfile,
   assignToken,
@@ -1231,5 +1329,6 @@ module.exports = {
   updateMember,
   deleteMember,
   getMember,
-  getMeta
+  getMeta,
+  faceRecognise
 };

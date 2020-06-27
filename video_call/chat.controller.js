@@ -24,13 +24,15 @@ class ChatController {
 
       this.chat.on("connection", socket => {
         console.log("connection Triggered");
-        socket.on("start-call", async doctorEmail => {
-          let doctor = await Practise.findOne({ email: doctorEmail });
+        socket.on("start-call", async data => {
+          console.log("Call Has been Started");
+          let doctor = await Practise.findOne({ _id: data.id });
           if (!doctor) {
             res.status(404).json({ status: false, message: "User Not Found!" });
           }
-          let roomID = doctor.current_socketid;
-          if (roomID && !has(this.rooms, roomID)) {
+          let roomID = data.roomName;
+          // if (roomID && !has(this.rooms, roomID)) {
+          if (!has(this.rooms, roomID)) {
             const newRoom = new RoomService(
               roomID,
               this.rooms,

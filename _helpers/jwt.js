@@ -61,6 +61,7 @@ function jwt() {
       "/patient/attempt",
       "/patient/register",
       "/patient/authenticate",
+      "/patient/authenticatebyImage",
       "/patient/update",
       "/patient/forgetpassword",
       "/patient/setpassword",
