@@ -17,7 +17,6 @@ const cookieparser = require("cookie-parser"),
   User = db.User;
 const session = require("express-session");
 const morgan = require("morgan");
-const chatModel = require("./chat/chat.model");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -121,7 +120,7 @@ io.on("connection", async socket => {
   // socket is unique to frontend and backend.
   console.log("User is using app now", socket.id);
 
-  socket.addListener("sendID", function (data) {
+  socket.addListener("sendID", function(data) {
     console.log("pushing");
     LoggedInUsers.push({
       email_id: data.email_id,
@@ -133,43 +132,15 @@ io.on("connection", async socket => {
       {
         $set: { current_socketID: socket.id }
       }
-    )
+    );
     console.log(LoggedInUsers);
   });
 
   // socket.on('hello', function (hello) { console.log('hello'); });
 
-  socket.on("sendMessage", data => {
-    //data={reciever,message,chatId,fromDoc}
-
-    const recieverOnline = LoggedInUsers.filter(
-      ele => ele.email_id === data.reciever
-    );
-
-    const chat = new (chatModel(data.chatId))({
-      message: data.message,
-      fromDoc: data.fromDoc
-    }); //collection name = chat.uuid4()
-
-    if (recieverOnline.length > 0) {
-      //reciever is online
-      const recieverSocketId = recieverOnline[0].user_Id;
-
-      //socket send message to reciever
-      io.to(recieverSocketId).emit("recieveMessage", {
-        chat: chat.toObject(),
-        chatId: data.chatId
-      });
-    } else {
-      //reciever is offline
-    }
-
-    chat.save();
-  });
-
-  socket.on("RemoveUser", async email => {
+  socket.on("disconnect", async () => {
     console.log("disconnect");
-    LoggedInUsers = LoggedInUsers.filter(data => data.email_id != email);
+    LoggedInUsers = LoggedInUsers.filter(data => data.User_Id != socket.id);
     console.log(LoggedInUsers);
   });
 });
