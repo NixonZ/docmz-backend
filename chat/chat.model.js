@@ -5,8 +5,9 @@ const chat = new Schema(
   {
     from: String,
     message: String,
-    _id: String,
-    time: { type: Date, default: Date.now }
+    _id: { type: String, unique: true, required: true },
+    time: { type: Date, default: Date.now },
+    image: { type: String, default: "" }
   },
   {
     _id: false

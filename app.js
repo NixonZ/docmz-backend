@@ -101,6 +101,8 @@ app.use("/referral", require("./routes/referral_routes"));
 
 app.use("/team", require("./routes/teams_route"));
 
+app.use("/chat", require("./routes/chat_routes"));
+
 app.use(errorHandler);
 
 global.LoggedInUsers = [];
@@ -135,17 +137,32 @@ io.on("connection", async socket => {
 
   socket.on("sendMessage", data => {
     //data={reciever,message,chatId,_id}
-    console.log("message recieved");
+    console.log("message recieved" + JSON.stringify(data));
 
     const recieverOnline = LoggedInUsers.filter(
       ele => ele.email_id === data.reciever
     );
 
     const chat = new (chatModel(data.chatId))({
-      message: data.message,
+      message: data.message ?? "",
       from: userEmail,
-      _id: data._id
+      _id: data._id,
+      time: data.time,
+      image: data.image ?? ""
     }); //collection name = chat.uuid4()
+
+    //testing: revert the message back to sender
+    console.log("sending back to " + socket.id);
+    io.to(socket.id).emit("recieveMessage", {
+      chat: {
+        message: data.message ?? "",
+        from: data.reciever,
+        _id: data._id + "a",
+        time: data.time,
+        image: data.image ?? ""
+      },
+      chatId: data.chatId
+    });
 
     if (recieverOnline.length > 0) {
       //reciever is online
