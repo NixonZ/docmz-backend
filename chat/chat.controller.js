@@ -1,6 +1,7 @@
 const multer = require("multer"),
   fs = require("fs"),
-  path = require("path");
+  path = require("path"),
+  chatModel = require("./chat.model");
 
 const uploadImg = (req, res, next) => {
   console.log("it came here");
@@ -15,7 +16,7 @@ const uploadImg = (req, res, next) => {
   res.send(file);
 };
 
-let storage = multer.diskStorage({
+const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     try {
       fs.mkdirSync(path.join(__dirname, "../public/chat/" + req.body.chatId));
@@ -29,14 +30,36 @@ let storage = multer.diskStorage({
   }
 });
 
-let uploadMulter = multer({
+const uploadMulter = multer({
   storage: storage,
   limits: {
     fileSize: 420 * 150 * 200
   }
 });
 
+const getChat = async (req, res) => {
+  const { chatIds, timestamp } = req.body;
+  console.log(req.body);
+  if (!chatIds) {
+    console.log("no chatids");
+    res.status(401).send({ message: "Please send chatIds" });
+    return;
+  }
+
+  let dataRes = {};
+
+  for (const chatId of chatIds) {
+    const model = chatModel(chatId);
+    dataRes[chatId] = await model.find({
+      time: { $gt: timestamp ?? 0 }
+    });
+  }
+
+  res.send(dataRes);
+};
+
 module.exports = {
   uploadImg,
-  uploadMulter
+  uploadMulter,
+  getChat
 };

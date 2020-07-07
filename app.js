@@ -71,7 +71,7 @@ app.use(express.static("public"));
 // });
 
 // use JWT auth to secure the api
-app.use(jwt());
+// app.use(jwt());
 
 app.use("/questionnaire", require("./routes/questionnaire_route"));
 
@@ -143,9 +143,10 @@ io.on("connection", async socket => {
       ele => ele.email_id === data.reciever
     );
 
+    // console.log(userEmail);
     const chat = new (chatModel(data.chatId))({
       message: data.message ?? "",
-      from: userEmail,
+      from: userEmail ?? "nomail",
       _id: data._id,
       time: data.time,
       image: data.image ?? ""

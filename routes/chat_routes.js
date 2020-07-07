@@ -7,4 +7,6 @@ router.post(
   chatController.uploadImg
 );
 
+router.post("/getChat", chatController.getChat);
+
 module.exports = router;
